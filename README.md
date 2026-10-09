@@ -1,41 +1,44 @@
-# Project 2 - BeReal Clone
+# Project 3 - *BeReal*
 
 Submitted by: **Sophia Sartor**
 
-**BeReal Clone** is an app that lets users sign up, log in, and post a photo from their photo library with a caption. Posts show up in a feed with the location and time the photo was taken.
+**BeReal** is an app that lets users take a photo with their camera and share it with a time and location. You can't see other users' photos until you post your own.
 
-Time spent: 6 hours spent in total
+Time spent: **6** hours spent in total
 
 ## Required Features
 
 The following **required** functionality is completed:
 
-- [x] Users see an app icon in the home screen and a styled launch screen.
-- [x] User can register a new account
-- [x] User can log in with newly created account
-- [x] App has a feed of posts when user logs in
-- [x] User can upload a new post which takes in a picture from photo library and an optional caption
-- [x] User is able to logout
+- [x] User can launch camera to take photo instead of photo library
+  - [ ] Users without iPhones to demo this feature can manually add unique photos to their simulator’s Photos app
+- [x] Posts have a time and location attached to them
+- [x] Users are not able to see other users’ photos until they upload their own.
 
 The following **optional** features are implemented:
 
-- [x] Users can pull to refresh their feed and see a loading indicator
-- [x] Users can infinite-scroll in their feed to see past the 10 most recent photos
-- [x] Users can see location and time of photo upload in the feed
-- [x] User stays logged in when app is closed and open again
+- [ ] Posts have a comment section, which displays the commenter’s username and comment context
+- [ ] User receives notification when it is time to post
 
 The following **additional** features are implemented:
 
-- [x] Location shows as a city and country name instead of coordinates
-- [x] Older posts without photo info still show the date they were posted
+- [x] Photos from other users are blurred until you post instead of being hidden
+- [x] Camera photos use the phone's current location, library photos use the location saved in the photo
+- [x] Feed shows the place name (city, country) along with the time
+- [x] Pull to refresh and infinite scroll (within the last 24 hours)
 
 ## Video Walkthrough
 
-https://youtu.be/zAbGGOHY5JA
+<div>
+    https://youtube.com/shorts/13e7vA6yPsY
+</div>
 
 ## Notes
 
-Getting the photo's location and time was the hardest part. I had to ask for photo library permission and use the photo's id to get its info. I also ran into a server error from Back4App once, but it worked again after a minute.
+- Had two copies of the project open by mistake (the lab and BeReal), so some changes went into the wrong one.
+- Running on my iPhone needed a new bundle identifier and trusting the developer certificate on the phone.
+- The app crashed when opening the camera until I added the camera permission in Info.plist.
+- Camera photos don't have location saved in them, so I used CLLocationManager to get the current location.
 
 ## License
 
