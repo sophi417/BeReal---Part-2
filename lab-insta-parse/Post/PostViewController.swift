@@ -1,5 +1,4 @@
-//
-//  PostViewController.swift
+////  PostViewController.swift
 //  lab-insta-parse
 //
 
@@ -21,9 +20,19 @@ class PostViewController: UIViewController {
     // info about the picked photo
     private var pickedDate: Date?
     private var pickedLocation: CLLocation?
+    // gets the phone's current location for camera photos
+    private let locationManager = CLLocationManager()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        // camera button next to share
+        let cameraButton = UIBarButtonItem(barButtonSystemItem: .camera, target: self, action: #selector(onTakePhotoTapped))
+        navigationItem.rightBarButtonItems = (navigationItem.rightBarButtonItems ?? []) + [cameraButton]
+      
+        //location access
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
     }
 
     @IBAction func onPickedImageTapped(_ sender: UIBarButtonItem) {
@@ -56,6 +65,21 @@ class PostViewController: UIViewController {
         present(picker, animated: true)
     }
 
+    @objc func onTakePhotoTapped() {
+        // simulator doesn't have a camera
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            print("❌📷 Camera not available")
+            return
+        }
+
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .camera
+        imagePicker.cameraDevice = .rear // back camera
+        imagePicker.allowsEditing = true
+        imagePicker.delegate = self
+        present(imagePicker, animated: true)
+    }
+
     @IBAction func onShareTapped(_ sender: Any) {
 
         view.endEditing(true)
@@ -85,20 +109,36 @@ class PostViewController: UIViewController {
         }
         print("3️⃣ About to save post, date: \(String(describing: pickedDate)), location: \(String(describing: pickedLocation?.coordinate))")
 
+        // save the post
         post.save { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let post):
                     print("✅ Post Saved! \(post)")
-                    self?.navigationController?.popViewController(animated: true)
+
+                    // update the user's last posted date
+                    if var currentUser = User.current {
+                        currentUser.lastPostedDate = Date()
+
+                        currentUser.save { [weak self] result in
+                            DispatchQueue.main.async {
+                                switch result {
+                                case .success(let user):
+                                    print("✅ User Saved! \(user)")
+                                    self?.navigationController?.popViewController(animated: true)
+                                case .failure(let error):
+                                    self?.showAlert(description: error.localizedDescription)
+                                }
+                            }
+                        }
+                    }
+
                 case .failure(let error):
-                    print("❌ SAVE FAILED: \(error)")
                     self?.showAlert(description: error.localizedDescription)
                 }
             }
         }
     }
-
     @IBAction func onViewTapped(_ sender: Any) {
         // dismiss keyboard
         view.endEditing(true)
@@ -159,3 +199,29 @@ extension PostViewController: PHPickerViewControllerDelegate {
         }
     }
 }
+
+// camera picker
+extension PostViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        
+        guard let image = info[.editedImage] as? UIImage else { return }
+        
+        // show the photo and save it for posting
+        previewImageView.image = image
+        pickedImage = image
+        
+        pickedDate = Date()
+        pickedLocation = locationManager.location
+    }
+}
+    //location updates
+    extension PostViewController: CLLocationManagerDelegate {
+        func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+            //start getting location once the user allows it
+            if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+                manager.startUpdatingLocation()
+            }
+        }
+    }
+

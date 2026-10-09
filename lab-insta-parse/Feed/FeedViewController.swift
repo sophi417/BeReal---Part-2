@@ -63,8 +63,12 @@ class FeedViewController: UIViewController {
         // how many posts to skip (the ones we already have)
         let skipCount = reset ? 0 : posts.count
 
+        // only get posts from the last 24 hours
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+
         let query = Post.query()
             .include("user")
+            .where("createdAt" >= yesterday)
             .order([.descending("createdAt")])
             .limit(pageSize)
             .skip(skipCount)

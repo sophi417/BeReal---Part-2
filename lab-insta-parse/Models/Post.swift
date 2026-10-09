@@ -18,6 +18,8 @@ struct Post: ParseObject {
     var caption: String?
     var user: User?
     var imageFile: ParseFile?
+   
+   
 
     // when the photo was taken (from the photo's info)
     var takenAt: Date?

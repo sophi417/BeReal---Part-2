@@ -18,14 +18,32 @@ class PostCell: UITableViewCell {
 
     private var imageDataRequest: DataRequest?
 
-    // turns coordinates into a place name
+    //turns coordinates into a place name
     private let geocoder = CLGeocoder()
 
-    // remembers place names we already looked up so we don't ask again
+    //remembers place names we already looked up so we don't ask again
     private static var placeCache = [String: String]()
 
     // which post this cell is showing right now
     private var currentPostId: String?
+
+    // blur that covers the photo if the user hasn't posted yet
+    private let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+
+        // put the blur on top of foto
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        postImageView.addSubview(blurView)
+        NSLayoutConstraint.activate([
+            blurView.topAnchor.constraint(equalTo: postImageView.topAnchor),
+            blurView.bottomAnchor.constraint(equalTo: postImageView.bottomAnchor),
+            blurView.leadingAnchor.constraint(equalTo: postImageView.leadingAnchor),
+            blurView.trailingAnchor.constraint(equalTo: postImageView.trailingAnchor)
+        ])
+        blurView.isHidden = true
+    }
 
     func configure(with post: Post) {
         currentPostId = post.objectId
@@ -54,6 +72,16 @@ class PostCell: UITableViewCell {
 
         // Date and location
         showDateAndLocation(for: post)
+
+        // only show the photo if it was posted within 24 hours of my last post
+        if let lastPostedDate = User.current?.lastPostedDate,
+           let postDate = post.createdAt {
+            let hoursApart = abs(postDate.timeIntervalSince(lastPostedDate)) / 3600
+            blurView.isHidden = hoursApart < 24
+        } else {
+            // never posted, so blur everything
+            blurView.isHidden = false
+        }
     }
 
     private func showDateAndLocation(for post: Post) {
@@ -65,7 +93,7 @@ class PostCell: UITableViewCell {
             return
         }
 
-        // format like "Aug 8, 2012 at 2:52 PM"
+        // format 
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
@@ -95,7 +123,6 @@ class PostCell: UITableViewCell {
             guard let self = self,
                   let placemark = placemarks?.first else { return }
 
-    
             let parts = [placemark.locality, placemark.country].compactMap { $0 }
             let place = parts.joined(separator: ", ")
             if place.isEmpty { return }
@@ -123,5 +150,8 @@ class PostCell: UITableViewCell {
         geocoder.cancelGeocode()
         dateLabel.text = nil
         currentPostId = nil
+
+        // reset the blur
+        blurView.isHidden = true
     }
 }
